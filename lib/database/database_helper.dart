@@ -19,7 +19,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     if (kIsWeb) {
       final db = MemoryDatabase();
-      await _insertDefaultData(db);
+      await _onCreate(db, 3);
       return db;
     }
     final dbPath = await getDatabasesPath();

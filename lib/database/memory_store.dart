@@ -50,12 +50,12 @@ class MemoryStore {
     String where,
     List<dynamic> whereArgs,
   ) {
+    final conditions = where.split(' AND ');
     return rows.where((row) {
-      _usedArgCount = 0;
-      final conditions = where.split(' AND ');
+      var usedArgCount = 0;
       for (final condition in conditions) {
         final trimmed = condition.trim();
-        if (!_evalCondition(row, trimmed, whereArgs)) {
+        if (!_evalCondition(row, trimmed, whereArgs, usedArgCount++)) {
           return false;
         }
       }
@@ -67,6 +67,7 @@ class MemoryStore {
     Map<String, dynamic> row,
     String condition,
     List<dynamic> whereArgs,
+    int argIndex,
   ) {
     final parts = _splitCondition(condition);
     if (parts.length < 3) return true;
@@ -75,12 +76,7 @@ class MemoryStore {
     final op = parts[1];
     final placeholder = parts[2];
 
-    int argIndex;
-    if (placeholder == '?') {
-      argIndex = _usedArgCount++;
-    } else {
-      return true;
-    }
+    if (placeholder != '?') return true;
 
     if (argIndex >= whereArgs.length) return true;
 
@@ -123,8 +119,6 @@ class MemoryStore {
     }
   }
 
-  int _usedArgCount = 0;
-
   List<String> _splitCondition(String condition) {
     final parts = <String>[];
     final buffer = StringBuffer();
@@ -144,7 +138,6 @@ class MemoryStore {
   }
 
   Future<int> insert(String table, Map<String, dynamic> values) async {
-    _usedArgCount = 0;
     final rows = _getTable(table);
     final id = values['id'] as String?;
     if (id != null) {
@@ -164,7 +157,6 @@ class MemoryStore {
     String? where,
     List<dynamic>? whereArgs,
   }) async {
-    _usedArgCount = 0;
     final rows = _getTable(table);
     int count = 0;
     for (int i = 0; i < rows.length; i++) {
@@ -181,8 +173,7 @@ class MemoryStore {
     String where,
     List<dynamic> whereArgs,
   ) {
-    _usedArgCount = 0;
-    return _evalCondition(row, where, whereArgs);
+    return _evalCondition(row, where, whereArgs, 0);
   }
 
   Future<int> delete(
@@ -190,7 +181,6 @@ class MemoryStore {
     String? where,
     List<dynamic>? whereArgs,
   }) async {
-    _usedArgCount = 0;
     final rows = _getTable(table);
     if (where == null) {
       final count = rows.length;
