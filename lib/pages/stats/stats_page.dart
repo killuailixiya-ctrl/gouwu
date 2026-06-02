@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../database/dao/order_dao.dart';
+import '../../database/dao/order_item_dao.dart';
 import '../../database/dao/series_dao.dart';
 import '../../database/dao/category_dao.dart';
 import '../../models/series.dart';
@@ -17,6 +18,7 @@ class StatsPage extends StatefulWidget {
 
 class _StatsPageState extends State<StatsPage> {
   final _orderDao = OrderDao();
+  final _orderItemDao = OrderItemDao();
   final _seriesDao = SeriesDao();
   final _categoryDao = CategoryDao();
 
@@ -51,9 +53,11 @@ class _StatsPageState extends State<StatsPage> {
       seriesSpending.sort((a, b) => b.value.compareTo(a.value));
 
       final allCategories = await _categoryDao.getAll();
+      final categorySpendingMap = await _orderItemDao.getCategorySpending();
       final categorySpending = <MapEntry<Category, double>>[];
       for (final c in allCategories) {
-        categorySpending.add(MapEntry(c, 0));
+        final spent = categorySpendingMap[c.id] ?? 0;
+        categorySpending.add(MapEntry(c, spent));
       }
       categorySpending.sort((a, b) => b.value.compareTo(a.value));
 

@@ -143,6 +143,20 @@ class OrderItemDao {
     return results;
   }
 
+  Future<Map<String, double>> getCategorySpending() async {
+    final db = await _dbHelper.database;
+    final rows = await db.query('order_item', where: 'category_id IS NOT NULL');
+    final map = <String, double>{};
+    for (final row in rows) {
+      final categoryId = row['category_id'];
+      if (categoryId == null) continue;
+      final unitPrice = (row['unit_price'] as num?)?.toDouble() ?? 0;
+      final quantity = (row['quantity'] as int?) ?? 1;
+      map[categoryId as String] = (map[categoryId] ?? 0) + (unitPrice * quantity);
+    }
+    return map;
+  }
+
   Future<void> insert(OrderItem item) async {
     final db = await _dbHelper.database;
     await db.insert('order_item', item.toMap());

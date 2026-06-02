@@ -19,8 +19,8 @@ class MemoryStore {
   }) async {
     var rows = _getTable(table).map((row) => Map<String, dynamic>.from(row)).toList();
 
-    if (where != null && whereArgs != null) {
-      rows = _applyWhere(rows, where, whereArgs);
+    if (where != null) {
+      rows = _applyWhere(rows, where, whereArgs ?? []);
     }
 
     if (orderBy != null) {
@@ -55,12 +55,23 @@ class MemoryStore {
       var usedArgCount = 0;
       for (final condition in conditions) {
         final trimmed = condition.trim();
-        if (!_evalCondition(row, trimmed, whereArgs, usedArgCount++)) {
+        if (!_evalCondition(row, trimmed, whereArgs, usedArgCount)) {
           return false;
+        }
+        if (_conditionUsesArg(trimmed)) {
+          usedArgCount++;
         }
       }
       return true;
     }).toList();
+  }
+
+  bool _conditionUsesArg(String condition) {
+    final parts = _splitCondition(condition);
+    if (parts.length >= 3 && parts[2] == 'NOT') {
+      return false;
+    }
+    return parts.length >= 3 && parts[2] == '?';
   }
 
   bool _evalCondition(
@@ -70,9 +81,19 @@ class MemoryStore {
     int argIndex,
   ) {
     final parts = _splitCondition(condition);
-    if (parts.length < 3) return true;
+    if (parts.length < 2) return true;
 
     final col = parts[0].replaceAll('"', '');
+
+    if (parts.length >= 3 && parts[1] == 'IS' && parts[2] == 'NOT' && parts.length >= 4 && parts[3] == 'NULL') {
+      return row[col] != null;
+    }
+    if (parts.length >= 3 && parts[1] == 'IS' && parts[2] == 'NULL') {
+      return row[col] == null;
+    }
+
+    if (parts.length < 3) return true;
+
     final op = parts[1];
     final placeholder = parts[2];
 
@@ -203,7 +224,7 @@ class MemoryStore {
     String sql, [
     List<dynamic>? args,
   ]) async {
-    return [<String, dynamic>{}];
+    return [];
   }
 
   void clear() {
