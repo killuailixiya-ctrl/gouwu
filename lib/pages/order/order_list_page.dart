@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../models/order.dart';
 import '../../models/order_item.dart';
 import '../../models/platform.dart';
+import '../../models/category.dart';
 import '../../database/dao/order_dao.dart';
 import '../../database/dao/order_item_dao.dart';
 import '../../database/dao/platform_dao.dart';
+import '../../database/dao/category_dao.dart';
 import 'order_detail_page.dart';
 import 'order_edit_page.dart';
 
@@ -21,20 +23,54 @@ class _OrderListPageState extends State<OrderListPage> {
   final _orderDao = OrderDao();
   final _platformDao = PlatformDao();
   final _orderItemDao = OrderItemDao();
+  final _categoryDao = CategoryDao();
 
   List<Order> _orders = [];
   List<Platform> _platforms = [];
+  List<Category> _categories = [];
   Map<String, List<OrderItem>> _orderItems = {};
   String? _filterStatus;
   String? _filterPlatform;
+  String? _filterCategoryId;
+  String _searchKeyword = '';
   bool _loading = true;
   bool _selectMode = false;
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
   final Set<String> _selectedOrderIds = {};
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Order> get _filteredOrders {
+    var result = _orders;
+    if (_searchKeyword.isNotEmpty) {
+      final kw = _searchKeyword.toLowerCase();
+      result = result.where((order) {
+        final items = _orderItems[order.id] ?? [];
+        return items.any((item) {
+          final name = (item.name).toLowerCase();
+          final spec = (item.spec ?? '').toLowerCase();
+          return name.contains(kw) || spec.contains(kw);
+        });
+      }).toList();
+    }
+    if (_filterCategoryId != null) {
+      result = result.where((order) {
+        final items = _orderItems[order.id] ?? [];
+        return items.any((item) => item.categoryId == _filterCategoryId);
+      }).toList();
+    }
+    return result;
   }
 
   Future<void> _loadData() async {
@@ -47,6 +83,7 @@ class _OrderListPageState extends State<OrderListPage> {
       debugPrint('========== [LOAD] 开始加载订单列表 ==========');
       debugPrint('[LOAD] orders.length = ${orders.length}');
       final platforms = await _platformDao.getAll();
+      final categories = await _categoryDao.getAll();
       final itemsMap = <String, List<OrderItem>>{};
       for (final order in orders) {
         itemsMap[order.id] = await _orderItemDao.getByOrderId(order.id);
@@ -59,6 +96,7 @@ class _OrderListPageState extends State<OrderListPage> {
       setState(() {
         _orders = orders;
         _platforms = platforms;
+        _categories = categories;
         _orderItems = itemsMap;
         _loading = false;
       });
@@ -69,32 +107,62 @@ class _OrderListPageState extends State<OrderListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final displayOrders = _filteredOrders;
     return Scaffold(
       appBar: AppBar(
         title: _selectMode
             ? Text('已选择 ${_selectedOrderIds.length} 项')
-            : const Text('订单管理'),
+            : _isSearching
+                ? TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: '搜索商品名称、规格...',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (v) => setState(() => _searchKeyword = v),
+                  )
+                : const Text('订单管理'),
         actions: [
-          if (_orders.isNotEmpty)
+          if (_isSearching)
             IconButton(
-              icon: Icon(_selectMode ? Icons.close : Icons.checklist),
-              tooltip: _selectMode ? '取消选择' : '批量选择',
+              icon: const Icon(Icons.close),
+              tooltip: '关闭搜索',
               onPressed: () {
+                _searchController.clear();
                 setState(() {
-                  _selectMode = !_selectMode;
-                  if (!_selectMode) _selectedOrderIds.clear();
+                  _isSearching = false;
+                  _searchKeyword = '';
                 });
               },
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: '搜索',
+              onPressed: () => setState(() => _isSearching = true),
             ),
+            if (_orders.isNotEmpty)
+              IconButton(
+                icon: Icon(_selectMode ? Icons.close : Icons.checklist),
+                tooltip: _selectMode ? '取消选择' : '批量选择',
+                onPressed: () {
+                  setState(() {
+                    _selectMode = !_selectMode;
+                    if (!_selectMode) _selectedOrderIds.clear();
+                  });
+                },
+              ),
+          ],
         ],
       ),
       body: Column(
         children: [
-          if (!_selectMode) _buildFilterBar(),
+          if (!_selectMode && !_isSearching) _buildFilterBar(),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : _orders.isEmpty
+                : displayOrders.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -103,7 +171,10 @@ class _OrderListPageState extends State<OrderListPage> {
                                 size: 64,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
                             const SizedBox(height: 16),
-                            Text('暂无订单',
+                            Text(
+                                _searchKeyword.isNotEmpty || _filterCategoryId != null
+                                    ? '没有匹配的订单'
+                                    : '暂无订单',
                                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ],
@@ -113,8 +184,8 @@ class _OrderListPageState extends State<OrderListPage> {
                         onRefresh: _loadData,
                         child: ListView.builder(
                           padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
-                          itemCount: _orders.length,
-                          itemBuilder: (_, i) => _buildOrderCard(_orders[i]),
+                          itemCount: displayOrders.length,
+                          itemBuilder: (_, i) => _buildOrderCard(displayOrders[i]),
                         ),
                       ),
           ),
@@ -137,7 +208,8 @@ class _OrderListPageState extends State<OrderListPage> {
   }
 
   Widget _buildBatchActionBar() {
-    final allSelected = _selectedOrderIds.length == _orders.length;
+    final displayOrders = _filteredOrders;
+    final allSelected = _selectedOrderIds.length == displayOrders.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -161,7 +233,7 @@ class _OrderListPageState extends State<OrderListPage> {
                   if (allSelected) {
                     _selectedOrderIds.clear();
                   } else {
-                    _selectedOrderIds.addAll(_orders.map((o) => o.id));
+                    _selectedOrderIds.addAll(displayOrders.map((o) => o.id));
                   }
                 });
               },
@@ -204,50 +276,78 @@ class _OrderListPageState extends State<OrderListPage> {
   }
 
   Widget _buildFilterBar() {
-    return Container(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Expanded(
+          SizedBox(
+            width: 110,
             child: DropdownButtonFormField<String?>(
               initialValue: _filterStatus,
               decoration: const InputDecoration(
                 labelText: '状态',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 isDense: true,
               ),
+              isExpanded: true,
               items: [
-                const DropdownMenuItem(value: null, child: Text('全部状态')),
+                const DropdownMenuItem(value: null, child: Text('全部', style: TextStyle(fontSize: 13))),
                 ...Order.statusLabels.entries.map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 13))),
                 ),
               ],
               onChanged: (v) {
-                _filterStatus = v;
+                setState(() => _filterStatus = v);
                 _loadData();
               },
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(
+          SizedBox(
+            width: 110,
             child: DropdownButtonFormField<String?>(
               initialValue: _filterPlatform,
               decoration: const InputDecoration(
                 labelText: '平台',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 isDense: true,
               ),
+              isExpanded: true,
               items: [
-                const DropdownMenuItem(value: null, child: Text('全部平台')),
+                const DropdownMenuItem(value: null, child: Text('全部', style: TextStyle(fontSize: 13))),
                 ..._platforms.map(
-                  (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
+                  (p) => DropdownMenuItem(value: p.id, child: Text(p.name, style: const TextStyle(fontSize: 13))),
                 ),
               ],
               onChanged: (v) {
-                _filterPlatform = v;
+                setState(() => _filterPlatform = v);
                 _loadData();
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 110,
+            child: DropdownButtonFormField<String?>(
+              initialValue: _filterCategoryId,
+              decoration: const InputDecoration(
+                labelText: '品类',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                isDense: true,
+              ),
+              isExpanded: true,
+              items: [
+                const DropdownMenuItem(value: null, child: Text('全部', style: TextStyle(fontSize: 13))),
+                ..._categories.map(
+                  (c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 13))),
+                ),
+              ],
+              onChanged: (v) {
+                setState(() => _filterCategoryId = v);
               },
             ),
           ),
