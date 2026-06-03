@@ -9,6 +9,8 @@ import '../../database/dao/order_dao.dart';
 import '../../database/dao/order_item_dao.dart';
 import '../../database/dao/platform_dao.dart';
 import '../../database/dao/category_dao.dart';
+import '../../theme/glass_container.dart';
+import '../../theme/app_animations.dart';
 import 'order_detail_page.dart';
 import 'order_edit_page.dart';
 
@@ -80,19 +82,12 @@ class _OrderListPageState extends State<OrderListPage> {
         status: _filterStatus,
         platformId: _filterPlatform,
       );
-      debugPrint('========== [LOAD] 开始加载订单列表 ==========');
-      debugPrint('[LOAD] orders.length = ${orders.length}');
       final platforms = await _platformDao.getAll();
       final categories = await _categoryDao.getAll();
       final itemsMap = <String, List<OrderItem>>{};
       for (final order in orders) {
         itemsMap[order.id] = await _orderItemDao.getByOrderId(order.id);
-        debugPrint('[LOAD] orderId=${order.id} items=${itemsMap[order.id]!.length}');
-        for (final item in itemsMap[order.id]!) {
-          debugPrint('[LOAD]   item: id=${item.id} orderId=${item.orderId} name=${item.name}');
-        }
       }
-      debugPrint('========== [LOAD] 加载完成 ==========');
       setState(() {
         _orders = orders;
         _platforms = platforms;
@@ -169,23 +164,36 @@ class _OrderListPageState extends State<OrderListPage> {
                           children: [
                             Icon(Icons.receipt_long,
                                 size: 64,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.3)),
                             const SizedBox(height: 16),
                             Text(
-                                _searchKeyword.isNotEmpty || _filterCategoryId != null
+                                _searchKeyword.isNotEmpty ||
+                                        _filterCategoryId != null
                                     ? '没有匹配的订单'
                                     : '暂无订单',
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant)),
                           ],
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: _loadData,
                         child: ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
+                          padding: const EdgeInsets.only(
+                              left: 16, right: 16, top: 16, bottom: 80),
                           itemCount: displayOrders.length,
-                          itemBuilder: (_, i) => _buildOrderCard(displayOrders[i]),
+                          itemBuilder: (_, i) => AppAnimations.fadeSlideIn(
+                            _buildOrderCard(displayOrders[i]),
+                            index: i,
+                          ),
                         ),
                       ),
           ),
@@ -210,41 +218,34 @@ class _OrderListPageState extends State<OrderListPage> {
   Widget _buildBatchActionBar() {
     final displayOrders = _filteredOrders;
     final allSelected = _selectedOrderIds.length == displayOrders.length;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
+    return GlassBottomBar(
       child: SafeArea(
-        child: Row(
-          children: [
-            TextButton.icon(
-              icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
-              label: Text(allSelected ? '取消全选' : '全选'),
-              onPressed: () {
-                setState(() {
-                  if (allSelected) {
-                    _selectedOrderIds.clear();
-                  } else {
-                    _selectedOrderIds.addAll(displayOrders.map((o) => o.id));
-                  }
-                });
-              },
-            ),
-            const Spacer(),
-            TextButton.icon(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              label: const Text('删除', style: TextStyle(color: Colors.red)),
-              onPressed: _selectedOrderIds.isEmpty ? null : _deleteSelected,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              TextButton.icon(
+                icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
+                label: Text(allSelected ? '取消全选' : '全选'),
+                onPressed: () {
+                  setState(() {
+                    if (allSelected) {
+                      _selectedOrderIds.clear();
+                    } else {
+                      _selectedOrderIds.addAll(displayOrders.map((o) => o.id));
+                    }
+                  });
+                },
+              ),
+              const Spacer(),
+              TextButton.icon(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                label:
+                    const Text('删除', style: TextStyle(color: Colors.red)),
+                onPressed: _selectedOrderIds.isEmpty ? null : _deleteSelected,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -257,7 +258,9 @@ class _OrderListPageState extends State<OrderListPage> {
         title: const Text('批量删除'),
         content: Text('确定要删除选中的 ${_selectedOrderIds.length} 个订单吗？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('删除', style: TextStyle(color: Colors.red)),
@@ -288,14 +291,20 @@ class _OrderListPageState extends State<OrderListPage> {
               decoration: const InputDecoration(
                 labelText: '状态',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 isDense: true,
               ),
               isExpanded: true,
               items: [
-                const DropdownMenuItem(value: null, child: Text('全部', style: TextStyle(fontSize: 13))),
+                const DropdownMenuItem(
+                    value: null,
+                    child: Text('全部', style: TextStyle(fontSize: 13))),
                 ...Order.statusLabels.entries.map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 13))),
+                  (e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value,
+                          style: const TextStyle(fontSize: 13))),
                 ),
               ],
               onChanged: (v) {
@@ -312,14 +321,20 @@ class _OrderListPageState extends State<OrderListPage> {
               decoration: const InputDecoration(
                 labelText: '平台',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 isDense: true,
               ),
               isExpanded: true,
               items: [
-                const DropdownMenuItem(value: null, child: Text('全部', style: TextStyle(fontSize: 13))),
+                const DropdownMenuItem(
+                    value: null,
+                    child: Text('全部', style: TextStyle(fontSize: 13))),
                 ..._platforms.map(
-                  (p) => DropdownMenuItem(value: p.id, child: Text(p.name, style: const TextStyle(fontSize: 13))),
+                  (p) => DropdownMenuItem(
+                      value: p.id,
+                      child: Text(p.name,
+                          style: const TextStyle(fontSize: 13))),
                 ),
               ],
               onChanged: (v) {
@@ -336,14 +351,20 @@ class _OrderListPageState extends State<OrderListPage> {
               decoration: const InputDecoration(
                 labelText: '品类',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 isDense: true,
               ),
               isExpanded: true,
               items: [
-                const DropdownMenuItem(value: null, child: Text('全部', style: TextStyle(fontSize: 13))),
+                const DropdownMenuItem(
+                    value: null,
+                    child: Text('全部', style: TextStyle(fontSize: 13))),
                 ..._categories.map(
-                  (c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 13))),
+                  (c) => DropdownMenuItem(
+                      value: c.id,
+                      child: Text(c.name,
+                          style: const TextStyle(fontSize: 13))),
                 ),
               ],
               onChanged: (v) {
@@ -357,7 +378,8 @@ class _OrderListPageState extends State<OrderListPage> {
   }
 
   Widget _buildOrderCard(Order order) {
-    final platform = _platforms.where((p) => p.id == order.platformId).firstOrNull;
+    final platform =
+        _platforms.where((p) => p.id == order.platformId).firstOrNull;
     final dateStr = DateFormat('MM/dd').format(order.orderTime);
     final currencyFormat = NumberFormat.currency(symbol: '¥', decimalDigits: 0);
     final items = _orderItems[order.id] ?? [];
@@ -365,133 +387,169 @@ class _OrderListPageState extends State<OrderListPage> {
     final hasImage = items.isNotEmpty && items.first.imagePath != null;
     final isSelected = _selectedOrderIds.contains(order.id);
 
-    Widget cardContent = Card(
+    Widget cardContent = GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
-      color: isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+      padding: const EdgeInsets.all(12),
+      opacity: isSelected ? 0.5 : 0.72,
+      backgroundColor: isSelected
+          ? Theme.of(context).colorScheme.primaryContainer
           : null,
-      child: InkWell(
-        onTap: () async {
-          if (_selectMode) {
-            setState(() {
-              if (isSelected) {
-                _selectedOrderIds.remove(order.id);
-              } else {
-                _selectedOrderIds.add(order.id);
-              }
-            });
-          } else {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OrderDetailPage(orderId: order.id),
+      onTap: () async {
+        if (_selectMode) {
+          setState(() {
+            if (isSelected) {
+              _selectedOrderIds.remove(order.id);
+            } else {
+              _selectedOrderIds.add(order.id);
+            }
+          });
+        } else {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OrderDetailPage(orderId: order.id),
+            ),
+          );
+          _loadData();
+        }
+      },
+      child: Row(
+        children: [
+          if (_selectMode)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Checkbox(
+                value: isSelected,
+                onChanged: (v) {
+                  setState(() {
+                    if (v == true) {
+                      _selectedOrderIds.add(order.id);
+                    } else {
+                      _selectedOrderIds.remove(order.id);
+                    }
+                  });
+                },
               ),
-            );
-            _loadData();
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              if (_selectMode)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Checkbox(
-                    value: isSelected,
-                    onChanged: (v) {
-                      setState(() {
-                        if (v == true) {
-                          _selectedOrderIds.add(order.id);
-                        } else {
-                          _selectedOrderIds.remove(order.id);
-                        }
-                      });
-                    },
-                  ),
-                ),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: hasImage
-                    ? Image.file(
-                        File(items.first.imagePath!),
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          width: 56,
-                          height: 56,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: Icon(Icons.image, size: 24,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: hasImage
+                ? Image.file(
+                    File(items.first.imagePath!),
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.5),
+                            Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.2),
+                          ],
                         ),
-                      )
-                    : Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(Icons.shopping_bag, size: 24,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (itemNames.isNotEmpty)
-                      Text(itemNames,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: _parseColor(platform?.colorCode ?? '#999').withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(platform?.name ?? '未知',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: _parseColor(platform?.colorCode ?? '#999'),
-                                  fontWeight: FontWeight.w500)),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(dateStr,
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                        if (items.length > 1) ...[
-                          const SizedBox(width: 8),
-                          Text('等${items.length}件',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                        ],
-                      ],
+                      child: Icon(Icons.image,
+                          size: 24,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant),
                     ),
+                  )
+                : Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.5),
+                          Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.2),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.shopping_bag,
+                        size: 24,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant),
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (itemNames.isNotEmpty)
+                  Text(itemNames,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _parseColor(platform?.colorCode ?? '#999')
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(platform?.name ?? '未知',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: _parseColor(
+                                  platform?.colorCode ?? '#999'),
+                              fontWeight: FontWeight.w500)),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(dateStr,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant)),
+                    if (items.length > 1) ...[
+                      const SizedBox(width: 8),
+                      Text('等${items.length}件',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant)),
+                    ],
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(currencyFormat.format(order.totalAmount),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 4),
-                  _buildStatusChip(order),
-                ],
-              ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(currencyFormat.format(order.totalAmount),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 4),
+              _buildStatusChip(order),
             ],
           ),
-        ),
+        ],
       ),
     );
 
@@ -507,8 +565,8 @@ class _OrderListPageState extends State<OrderListPage> {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.red.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
@@ -517,40 +575,24 @@ class _OrderListPageState extends State<OrderListPage> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('确认删除'),
-            content: Text('确定要删除此订单吗？\n${itemNames.isNotEmpty ? itemNames : "无商品"}'),
+            content: Text(
+                '确定要删除此订单吗？\n${itemNames.isNotEmpty ? itemNames : "无商品"}'),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('取消')),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child:
+                    const Text('删除', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
-        ) ?? false;
+        );
       },
       onDismissed: (_) async {
         await _orderDao.delete(order.id);
-        setState(() {
-          _orders.removeWhere((o) => o.id == order.id);
-          _orderItems.remove(order.id);
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('已删除订单「${itemNames.isNotEmpty ? itemNames : "无商品"}」'),
-              action: SnackBarAction(
-                label: '撤销',
-                onPressed: () async {
-                  await _orderDao.insert(order);
-                  for (final item in items) {
-                    await _orderItemDao.insert(item);
-                  }
-                  _loadData();
-                },
-              ),
-            ),
-          );
-        }
+        _loadData();
       },
       child: cardContent,
     );
@@ -571,6 +613,9 @@ class _OrderListPageState extends State<OrderListPage> {
       case 'received':
         color = Colors.green;
         break;
+      case 'completed':
+        color = Colors.grey;
+        break;
       default:
         color = Colors.grey;
     }
@@ -580,7 +625,11 @@ class _OrderListPageState extends State<OrderListPage> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(order.statusLabel, style: TextStyle(fontSize: 10, color: color)),
+      child: Text(
+        Order.statusLabels[order.status] ?? order.status,
+        style:
+            TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+      ),
     );
   }
 

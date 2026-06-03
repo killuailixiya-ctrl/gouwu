@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/platform.dart';
 import '../../database/dao/platform_dao.dart';
+import '../../theme/glass_container.dart';
 
 class PlatformManagePage extends StatefulWidget {
   const PlatformManagePage({super.key});
@@ -236,7 +237,7 @@ class _PlatformManagePageState extends State<PlatformManagePage> {
                   itemBuilder: (_, i) {
                     final platform = _platforms[i];
                     final color = _parseColor(platform.colorCode);
-                    return Card(
+                    return GlassContainer(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: Container(

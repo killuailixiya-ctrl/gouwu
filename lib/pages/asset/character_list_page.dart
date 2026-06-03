@@ -8,6 +8,7 @@ import '../../models/series.dart';
 import '../../models/character.dart';
 import '../../database/dao/character_dao.dart';
 import '../../database/dao/series_dao.dart';
+import '../../theme/glass_container.dart';
 import 'character_products_page.dart';
 
 class CharacterListPage extends StatefulWidget {
@@ -528,8 +529,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
 
     return GestureDetector(
       onLongPress: _manageMode ? null : _showSeriesCoverOptions,
-      child: Card(
-        child: Padding(
+      child: GlassContainer(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
@@ -568,7 +568,6 @@ class _CharacterListPageState extends State<CharacterListPage> {
           ],
         ),
       ),
-      ),
     );
   }
 
@@ -605,9 +604,13 @@ class _CharacterListPageState extends State<CharacterListPage> {
     final platforms = stat['platforms'] as String? ?? '';
     final isSelected = _selectedIds.contains(character.id);
 
-    return Card(
+    return GlassContainer(
       key: key,
       margin: const EdgeInsets.only(bottom: 8),
+      opacity: isSelected ? 0.5 : 0.72,
+      backgroundColor: isSelected
+          ? Theme.of(context).colorScheme.primaryContainer
+          : null,
       child: InkWell(
         onTap: () {
           if (_manageMode) {
@@ -693,7 +696,7 @@ class _CharacterListPageState extends State<CharacterListPage> {
   }
 
   Widget _buildUnassignedCard() {
-    return Card(
+    return GlassContainer(
       child: InkWell(
         onTap: () {
           Navigator.push(

@@ -7,6 +7,7 @@ import '../../models/platform.dart';
 import '../../database/dao/order_dao.dart';
 import '../../database/dao/order_item_dao.dart';
 import '../../database/dao/platform_dao.dart';
+import '../../theme/glass_container.dart';
 import '../order/order_edit_page.dart';
 import '../order/order_item_detail_page.dart';
 
@@ -137,10 +138,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildOrderInfoCard(String dateStr, NumberFormat currencyFormat) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -182,7 +182,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ],
             ),
           ],
-        ),
       ),
     );
   }
@@ -221,10 +220,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Widget _buildScreenshotSection() {
     final file = File(_order!.screenshotPath!);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('订单截图',
@@ -249,7 +247,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     ),
             ),
           ],
-        ),
       ),
     );
   }
@@ -267,7 +264,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildItemCard(OrderItem item, NumberFormat currencyFormat) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -339,11 +336,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     final daysLeft = _order!.daysUntilBalanceDeadline;
     final isOverdue = _order!.isBalanceOverdue;
 
-    return Card(
-      color: isOverdue ? Colors.red.withValues(alpha: 0.05) : Colors.orange.withValues(alpha: 0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+    return GlassContainer(
+      backgroundColor: isOverdue ? Colors.red.withValues(alpha: 0.05) : Colors.orange.withValues(alpha: 0.05),
+      padding: const EdgeInsets.all(16),
+      child: Row(
           children: [
             Icon(
               isOverdue ? Icons.warning : Icons.access_time,
@@ -370,7 +366,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
             ),
           ],
-        ),
       ),
     );
   }

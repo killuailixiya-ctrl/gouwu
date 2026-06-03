@@ -23,6 +23,7 @@ import '../../database/dao/product_dao.dart';
 import '../../services/dedup_service.dart';
 import '../../services/reminder_service.dart';
 import '../../services/ocr_service.dart';
+import '../../theme/glass_container.dart';
 import '../settings/platform_manage_page.dart';
 
 class ScreenshotImportPage extends StatefulWidget {
@@ -479,13 +480,12 @@ class _ScreenshotImportPageState extends State<ScreenshotImportPage> {
   }
 
   Widget _buildImageSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('截图预览', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('截图预览', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             if (_imageBytes != null) ...[
               ClipRRect(
@@ -568,20 +568,18 @@ class _ScreenshotImportPageState extends State<ScreenshotImportPage> {
               ),
             ],
           ],
-        ),
       ),
     );
   }
 
   Widget _buildOrderInfoSection() {
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('订单信息', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('订单信息', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -732,7 +730,6 @@ class _ScreenshotImportPageState extends State<ScreenshotImportPage> {
               onChanged: (v) => _notes = v,
             ),
           ],
-        ),
       ),
     );
   }
@@ -799,11 +796,10 @@ class _ScreenshotImportPageState extends State<ScreenshotImportPage> {
   }
 
   Widget _buildItemCard(int index, _ImportItemEntry item) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
+      padding: const EdgeInsets.all(12),
+      child: Column(
           children: [
             Row(
               children: [
@@ -1050,7 +1046,6 @@ class _ScreenshotImportPageState extends State<ScreenshotImportPage> {
               onChanged: (v) => item.spec = v,
             ),
           ],
-        ),
       ),
     );
   }

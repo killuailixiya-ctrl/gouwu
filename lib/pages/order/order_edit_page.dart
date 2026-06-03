@@ -20,6 +20,7 @@ import '../../database/dao/series_dao.dart';
 import '../../database/dao/character_dao.dart';
 import '../../database/dao/category_dao.dart';
 import '../../database/dao/product_dao.dart';
+import '../../theme/glass_container.dart';
 import '../../services/dedup_service.dart';
 import '../../services/reminder_service.dart';
 import '../../database/database_helper.dart';
@@ -563,13 +564,12 @@ class _OrderEditPageState extends State<OrderEditPage> {
   }
 
   Widget _buildOrderImageSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('订单截图', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('订单截图', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             if (_orderImageBytes != null) ...[
               ClipRRect(
@@ -634,19 +634,17 @@ class _OrderEditPageState extends State<OrderEditPage> {
               ),
             ],
           ],
-        ),
       ),
     );
   }
 
   Widget _buildOrderInfoSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('订单信息', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('订单信息', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _safeDropdownValue(_selectedPlatformId, _platforms.map((p) => p.id).toList()),
@@ -747,7 +745,6 @@ class _OrderEditPageState extends State<OrderEditPage> {
               onSaved: (v) => _notes = v,
             ),
           ],
-        ),
       ),
     );
   }
@@ -775,11 +772,10 @@ class _OrderEditPageState extends State<OrderEditPage> {
 
   Widget _buildItemCard(int index) {
     final item = _items[index];
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
+      padding: const EdgeInsets.all(12),
+      child: Column(
           children: [
             Row(
               children: [
@@ -1008,19 +1004,17 @@ class _OrderEditPageState extends State<OrderEditPage> {
               ],
             ),
           ],
-        ),
       ),
     );
   }
 
   Widget _buildPresellSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('预售设置', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('预售设置', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             SwitchListTile(
               title: const Text('包含预售商品'),
@@ -1048,7 +1042,6 @@ class _OrderEditPageState extends State<OrderEditPage> {
               ),
             ],
           ],
-        ),
       ),
     );
   }

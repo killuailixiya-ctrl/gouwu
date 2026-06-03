@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/category.dart';
 import '../../database/dao/category_dao.dart';
+import '../../theme/glass_container.dart';
 
 class CategoryManagePage extends StatefulWidget {
   const CategoryManagePage({super.key});
@@ -153,7 +154,7 @@ class _CategoryManagePageState extends State<CategoryManagePage> {
                   itemCount: _categories.length,
                   itemBuilder: (_, i) {
                     final category = _categories[i];
-                    return Card(
+                    return GlassContainer(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: Container(

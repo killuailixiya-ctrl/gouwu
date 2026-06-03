@@ -3,6 +3,7 @@ import '../../services/search_service.dart';
 import '../asset/character_list_page.dart';
 import '../asset/character_products_page.dart';
 import '../order/order_item_detail_page.dart';
+import '../../theme/glass_container.dart';
 import '../../database/dao/series_dao.dart';
 import '../../database/dao/order_item_dao.dart';
 
@@ -215,7 +216,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildSeriesResult(SearchResult result) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Container(
@@ -237,7 +238,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildCharacterResult(SearchResult result) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
@@ -254,7 +255,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildProductResult(SearchResult result) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Container(

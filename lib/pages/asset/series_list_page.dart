@@ -8,6 +8,8 @@ import '../../models/series.dart';
 import '../../models/character.dart';
 import '../../database/dao/series_dao.dart';
 import '../../database/dao/character_dao.dart';
+import '../../theme/glass_container.dart';
+import '../../theme/app_animations.dart';
 import 'character_list_page.dart';
 import 'character_products_page.dart';
 import '../search/search_page.dart';
@@ -303,7 +305,10 @@ class _SeriesListPageState extends State<SeriesListPage> {
       },
       itemBuilder: (context, index) {
         final series = _seriesList[index];
-        return _buildSeriesCard(series, index: index, key: ValueKey(series.id));
+        return AppAnimations.fadeSlideIn(
+          _buildSeriesCard(series, index: index, key: ValueKey(series.id)),
+          index: index,
+        );
       },
     );
 
@@ -379,7 +384,7 @@ class _SeriesListPageState extends State<SeriesListPage> {
               width: 32,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Colors.grey[400],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -454,9 +459,14 @@ class _SeriesListPageState extends State<SeriesListPage> {
     final characters = _charactersCache[series.id];
     final charStats = _characterStatsCache[series.id];
 
-    return Card(
+    return GlassContainer(
       key: key,
       margin: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.zero,
+      opacity: isSelected ? 0.5 : 0.72,
+      backgroundColor: isSelected
+          ? Theme.of(context).colorScheme.primaryContainer
+          : null,
       child: Column(
         children: [
           InkWell(
@@ -475,7 +485,7 @@ class _SeriesListPageState extends State<SeriesListPage> {
             onLongPress: _manageMode
                 ? null
                 : () => _showSeriesOptions(series),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(

@@ -6,6 +6,8 @@ import '../../database/dao/series_dao.dart';
 import '../../database/dao/category_dao.dart';
 import '../../models/series.dart';
 import '../../models/category.dart';
+import '../../theme/glass_container.dart';
+import '../../theme/app_animations.dart';
 import '../settings/category_manage_page.dart';
 import '../settings/platform_manage_page.dart';
 
@@ -95,9 +97,9 @@ class _StatsPageState extends State<StatsPage> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 children: [
-                  _buildMonthlyCard(currencyFormat),
+                  AppAnimations.scaleFadeIn(_buildMonthlyCard(currencyFormat)),
                   const SizedBox(height: 16),
                   _buildPlatformChart(),
                   const SizedBox(height: 16),
@@ -112,25 +114,23 @@ class _StatsPageState extends State<StatsPage> {
 
   Widget _buildMonthlyCard(NumberFormat currencyFormat) {
     final now = DateTime.now();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text('${now.year}年${now.month}月',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 8),
-            Text(currencyFormat.format(_monthlyTotal),
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary)),
-            const SizedBox(height: 4),
-            Text('本月消费总额',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          ],
-        ),
+    return GlassContainer(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Text('${now.year}年${now.month}月',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 8),
+          Text(currencyFormat.format(_monthlyTotal),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary)),
+          const SizedBox(height: 4),
+          Text('本月消费总额',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        ],
       ),
     );
   }
@@ -151,62 +151,72 @@ class _StatsPageState extends State<StatsPage> {
       '京东': const Color(0xFFC91623),
     };
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('平台消费分布',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            ...entries.map((entry) {
-              final pct = total > 0 ? entry.value / total : 0.0;
-              final color = platformColors[entry.key] ?? Colors.grey;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('平台消费分布',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          ...entries.map((entry) {
+            final pct = total > 0 ? entry.value / total : 0.0;
+            final color = platformColors[entry.key] ?? Colors.grey;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(2),
                             ),
-                            const SizedBox(width: 8),
-                            Text(entry.key, style: const TextStyle(fontSize: 13)),
-                          ],
-                        ),
-                        Text(
-                          '¥${entry.value.toStringAsFixed(0)} (${(pct * 100).toStringAsFixed(0)}%)',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: pct,
-                        backgroundColor: color.withValues(alpha: 0.1),
-                        valueColor: AlwaysStoppedAnimation(color),
-                        minHeight: 6,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(entry.key,
+                              style: const TextStyle(fontSize: 13)),
+                        ],
                       ),
+                      Text(
+                        '¥${entry.value.toStringAsFixed(0)} (${(pct * 100).toStringAsFixed(0)}%)',
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: pct),
+                      duration: AppAnimations.medium,
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) {
+                        return LinearProgressIndicator(
+                          value: value,
+                          backgroundColor: color.withValues(alpha: 0.1),
+                          valueColor: AlwaysStoppedAnimation(color),
+                          minHeight: 6,
+                        );
+                      },
                     ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -214,50 +224,60 @@ class _StatsPageState extends State<StatsPage> {
   Widget _buildSeriesSpending(NumberFormat currencyFormat) {
     if (_seriesSpending.isEmpty) return const SizedBox.shrink();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('IP消费排行',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            ..._seriesSpending.take(10).map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('IP消费排行',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          ..._seriesSpending.take(10).toList().asMap().entries.map((e) {
+            final entry = e.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                        ],
                       ),
-                      child: Center(
-                        child: Text(entry.key.name.isNotEmpty ? entry.key.name[0] : '?',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14)),
-                      ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(entry.key.name,
-                          style: const TextStyle(fontSize: 14)),
+                    child: Center(
+                      child: Text(
+                          entry.key.name.isNotEmpty
+                              ? entry.key.name[0]
+                              : '?',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14)),
                     ),
-                    Text(currencyFormat.format(entry.value),
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary)),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(entry.key.name,
+                        style: const TextStyle(fontSize: 14)),
+                  ),
+                  Text(currencyFormat.format(entry.value),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary)),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -265,47 +285,50 @@ class _StatsPageState extends State<StatsPage> {
   Widget _buildCategorySpending(NumberFormat currencyFormat) {
     if (_categorySpending.isEmpty) return const SizedBox.shrink();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text('品类分布',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('品类分布',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const CategoryManagePage()),
+                  );
+                  _loadData();
+                },
+                child: const Text('管理'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _categorySpending.map((entry) {
+              return Chip(
+                avatar: Icon(
+                  _getCategoryIcon(entry.key.id),
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-                TextButton(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CategoryManagePage()),
-                    );
-                    _loadData();
-                  },
-                  child: const Text('管理'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _categorySpending.map((entry) {
-                return Chip(
-                  avatar: Icon(
-                    _getCategoryIcon(entry.key.id),
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  label: Text('${entry.key.name} ¥${entry.value.toStringAsFixed(0)}'),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+                label: Text(
+                    '${entry.key.name} ¥${entry.value.toStringAsFixed(0)}'),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

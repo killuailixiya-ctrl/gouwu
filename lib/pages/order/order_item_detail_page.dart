@@ -13,6 +13,7 @@ import '../../database/dao/series_dao.dart';
 import '../../database/dao/character_dao.dart';
 import '../../database/dao/category_dao.dart';
 import '../../database/dao/platform_dao.dart';
+import '../../theme/glass_container.dart';
 import 'order_detail_page.dart';
 
 class OrderItemDetailPage extends StatefulWidget {
@@ -146,8 +147,9 @@ class _OrderItemDetailPageState extends State<OrderItemDetailPage> {
   }
 
   Widget _buildImageCard(ColorScheme colorScheme) {
-    return Card(
+    return GlassContainer(
       clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.zero,
       child: AspectRatio(
         aspectRatio: 16 / 9,
         child: _item!.imagePath != null
@@ -175,14 +177,13 @@ class _OrderItemDetailPageState extends State<OrderItemDetailPage> {
   }
 
   Widget _buildBasicInfoCard(NumberFormat currencyFormat, ColorScheme colorScheme) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _item!.name,
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _item!.name,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             if (_item!.spec != null) ...[
@@ -211,20 +212,18 @@ class _OrderItemDetailPageState extends State<OrderItemDetailPage> {
               _buildInfoTile('状态', _item!.itemStatus!),
             ],
           ],
-        ),
       ),
     );
   }
 
   Widget _buildAttributionCard(ColorScheme colorScheme) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '归属信息',
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '归属信息',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -262,20 +261,18 @@ class _OrderItemDetailPageState extends State<OrderItemDetailPage> {
                 ],
               ),
           ],
-        ),
       ),
     );
   }
 
   Widget _buildSourceTextCard(ColorScheme colorScheme) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '原始文本',
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '原始文本',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -292,13 +289,12 @@ class _OrderItemDetailPageState extends State<OrderItemDetailPage> {
               ),
             ),
           ],
-        ),
       ),
     );
   }
 
   Widget _buildOrderCard(NumberFormat currencyFormat, ColorScheme colorScheme) {
-    return Card(
+    return GlassContainer(
       child: InkWell(
         onTap: () {
           Navigator.push(

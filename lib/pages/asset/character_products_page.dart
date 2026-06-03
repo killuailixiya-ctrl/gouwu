@@ -4,6 +4,7 @@ import '../../models/order_item.dart';
 import '../../models/platform.dart';
 import '../../database/dao/order_item_dao.dart';
 import '../../database/dao/platform_dao.dart';
+import '../../theme/glass_container.dart';
 import '../order/order_item_detail_page.dart';
 
 class CharacterProductsPage extends StatefulWidget {
@@ -114,11 +115,10 @@ class _CharacterProductsPageState extends State<CharacterProductsPage> {
   }
 
   Widget _buildSummaryCard(double totalSpent, NumberFormat currencyFormat) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+      padding: const EdgeInsets.all(16),
+      child: Row(
           children: [
             Container(
               width: 48,
@@ -156,7 +156,6 @@ class _CharacterProductsPageState extends State<CharacterProductsPage> {
                     color: Theme.of(context).colorScheme.primary)),
           ],
         ),
-      ),
     );
   }
 
@@ -197,7 +196,7 @@ class _CharacterProductsPageState extends State<CharacterProductsPage> {
   }
 
   Widget _buildProductCard(OrderItem item, NumberFormat currencyFormat) {
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: () {

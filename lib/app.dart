@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'theme/app_theme.dart';
+import 'theme/glass_container.dart';
+import 'theme/app_animations.dart';
 import 'pages/dashboard/dashboard_page.dart';
 import 'pages/order/order_list_page.dart';
 import 'pages/asset/series_list_page.dart';
@@ -10,25 +13,9 @@ class GouWuApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '购物 - 二次元购物管理',
+      title: '购物',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C5CE7),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
-        cardTheme: CardThemeData(
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       home: const MainPage(),
     );
   }
@@ -54,12 +41,23 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: NavigationBar(
+      extendBody: true,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: _buildBottomBar(),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return GlassBottomBar(
+      child: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
           setState(() => _currentIndex = index);
         },
+        animationDuration: AppAnimations.medium,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

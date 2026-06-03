@@ -8,6 +8,8 @@ import '../../models/order.dart';
 import '../../models/reminder.dart';
 import '../../models/platform.dart';
 import '../../models/series.dart';
+import '../../theme/glass_container.dart';
+import '../../theme/app_animations.dart';
 import '../order/order_edit_page.dart';
 import '../order/order_detail_page.dart';
 import '../order/screenshot_import_page.dart';
@@ -49,8 +51,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final platforms = await _platformDao.getAll();
       final allSeries = await _seriesDao.getAll();
       final now = DateTime.now();
-      final monthlyTotal =
-          await _orderDao.getMonthlyTotal(now.year, now.month);
+      final monthlyTotal = await _orderDao.getMonthlyTotal(now.year, now.month);
 
       final seriesWithCounts = <MapEntry<Series, int>>[];
       for (final s in allSeries) {
@@ -93,9 +94,9 @@ class _DashboardPageState extends State<DashboardPage> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 children: [
-                  _buildMonthlyOverview(),
+                  AppAnimations.scaleFadeIn(_buildMonthlyOverview()),
                   const SizedBox(height: 16),
                   _buildReminderSection(),
                   const SizedBox(height: 16),
@@ -123,43 +124,49 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildMonthlyOverview() {
     final currencyFormat = NumberFormat.currency(symbol: '¥', decimalDigits: 0);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
+    return GlassContainer(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Icon(Icons.account_balance_wallet,
-                  color: Theme.of(context).colorScheme.primary),
+              borderRadius: BorderRadius.circular(14),
             ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('本月消费',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                const SizedBox(height: 4),
-                Text(currencyFormat.format(_monthlyTotal),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              '${_recentOrders.length}笔订单',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-          ],
-        ),
+            child: Icon(Icons.account_balance_wallet,
+                color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('本月消费',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 4),
+              Text(currencyFormat.format(_monthlyTotal),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            '${_recentOrders.length}笔订单',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+        ],
       ),
     );
   }
@@ -167,31 +174,37 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildReminderSection() {
     if (_activeReminders.isEmpty) return const SizedBox.shrink();
 
-    final urgent = _activeReminders
-        .where((r) => r.urgencyLevel >= 3)
-        .toList();
-    final normal = _activeReminders
-        .where((r) => r.urgencyLevel < 3)
-        .toList();
+    final urgent = _activeReminders.where((r) => r.urgencyLevel >= 3).toList();
+    final normal = _activeReminders.where((r) => r.urgencyLevel < 3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.notifications_active, size: 20, color: Colors.orange),
-            const SizedBox(width: 8),
-            Text('待处理提醒',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold)),
-            const Spacer(),
-            Text('${_activeReminders.length}条',
-                style: Theme.of(context).textTheme.bodySmall),
-          ],
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.notifications_active, size: 20, color: Colors.orange),
+              const SizedBox(width: 8),
+              Text('待处理提醒',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text('${_activeReminders.length}条',
+                  style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        ...urgent.map(_buildReminderCard),
-        ...normal.map(_buildReminderCard),
+        ...urgent.asMap().entries.map((e) =>
+            AppAnimations.fadeSlideIn(
+              _buildReminderCard(e.value),
+              index: e.key,
+            )),
+        ...normal.asMap().entries.map((e) =>
+            AppAnimations.fadeSlideIn(
+              _buildReminderCard(e.value),
+              index: urgent.length + e.key,
+            )),
       ],
     );
   }
@@ -206,31 +219,47 @@ class _DashboardPageState extends State<DashboardPage> {
     final color = colors[reminder.urgencyLevel] ?? Colors.grey;
     final dateStr = DateFormat('MM/dd HH:mm').format(reminder.remindAt);
 
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+      padding: const EdgeInsets.all(4),
+      onTap: () async {
+        await _reminderDao.dismiss(reminder.id);
+        _loadData();
+      },
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              reminder.type == 'balance' ? Icons.payment : Icons.local_shipping,
+              color: color,
+              size: 20,
+            ),
           ),
-          child: Icon(
-            reminder.type == 'balance' ? Icons.payment : Icons.local_shipping,
-            color: color,
-            size: 20,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(reminder.message ?? reminder.typeLabel,
+                    style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 2),
+                Text(dateStr, style: const TextStyle(fontSize: 12)),
+              ],
+            ),
           ),
-        ),
-        title: Text(reminder.message ?? reminder.typeLabel,
-            style: const TextStyle(fontSize: 14)),
-        subtitle: Text(dateStr, style: const TextStyle(fontSize: 12)),
-        trailing: IconButton(
-          icon: const Icon(Icons.check_circle_outline, size: 20),
-          onPressed: () async {
-            await _reminderDao.dismiss(reminder.id);
-            _loadData();
-          },
-        ),
+          IconButton(
+            icon: const Icon(Icons.check_circle_outline, size: 20),
+            onPressed: () async {
+              await _reminderDao.dismiss(reminder.id);
+              _loadData();
+            },
+          ),
+        ],
       ),
     );
   }
@@ -292,15 +321,12 @@ class _DashboardPageState extends State<DashboardPage> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return AppAnimations.pressScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: GlassContainer(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-        ),
+        blurStrength: 6,
+        opacity: 0.6,
         child: Column(
           children: [
             Icon(icon, color: color, size: 28),
@@ -320,12 +346,14 @@ class _DashboardPageState extends State<DashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('热门IP',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text('热门IP',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+        ),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -360,7 +388,10 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Icon(Icons.inventory_2_outlined,
                   size: 64,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withValues(alpha: 0.3)),
               const SizedBox(height: 16),
               Text('还没有订单记录',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -378,79 +409,84 @@ class _DashboardPageState extends State<DashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('最近订单',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ..._recentOrders.map(_buildOrderCard),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text('最近订单',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+        ),
+        ..._recentOrders.asMap().entries.map((e) =>
+            AppAnimations.fadeSlideIn(
+              _buildOrderCard(e.value),
+              index: e.key,
+            )),
       ],
     );
   }
 
   Widget _buildOrderCard(Order order) {
-    final platform = _platforms.where((p) => p.id == order.platformId).firstOrNull;
+    final platform =
+        _platforms.where((p) => p.id == order.platformId).firstOrNull;
     final dateStr = DateFormat('MM/dd').format(order.orderTime);
     final currencyFormat = NumberFormat.currency(symbol: '¥', decimalDigits: 0);
 
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => OrderDetailPage(orderId: order.id),
+      padding: const EdgeInsets.all(12),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OrderDetailPage(orderId: order.id),
+          ),
+        );
+        _loadData();
+      },
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _parseColor(platform?.colorCode ?? '#999')
+                  .withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
             ),
-          );
-          _loadData();
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _parseColor(platform?.colorCode ?? '#999').withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(platform?.name ?? '未知',
+            child: Text(platform?.name ?? '未知',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: _parseColor(platform?.colorCode ?? '#999'),
+                    fontWeight: FontWeight.w500)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(order.orderNo ?? '无订单号',
+                    style: const TextStyle(fontSize: 13)),
+                const SizedBox(height: 2),
+                Text(dateStr,
                     style: TextStyle(
-                        fontSize: 12,
-                        color: _parseColor(platform?.colorCode ?? '#999'),
-                        fontWeight: FontWeight.w500)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(order.orderNo ?? '无订单号',
-                        style: const TextStyle(fontSize: 13)),
-                    const SizedBox(height: 2),
-                    Text(dateStr,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(currencyFormat.format(order.totalAmount),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 2),
-                  _buildStatusChip(order),
-                ],
-              ),
+                        fontSize: 11,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(currencyFormat.format(order.totalAmount),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 2),
+              _buildStatusChip(order),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -482,8 +518,10 @@ class _DashboardPageState extends State<DashboardPage> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(order.statusLabel,
-          style: TextStyle(fontSize: 10, color: color)),
+      child: Text(
+        Order.statusLabels[order.status] ?? order.status,
+        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
+      ),
     );
   }
 

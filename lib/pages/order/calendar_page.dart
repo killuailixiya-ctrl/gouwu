@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../theme/glass_container.dart';
 import '../../database/dao/order_dao.dart';
 import '../../database/dao/order_item_dao.dart';
 import '../../database/dao/series_dao.dart';
@@ -203,8 +204,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
     final currencyFormat = NumberFormat.currency(symbol: '¥', decimalDigits: 0);
 
-    return Card(
+    return GlassContainer(
       clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           Container(
@@ -397,7 +399,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final items = _orderItemsMap[order.id] ?? [];
     final itemNames = items.map((e) => e.name).take(2).join('、');
 
-    return Card(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: () async {
@@ -450,13 +452,12 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget _buildLegend() {
     if (_seriesColorMap.isEmpty) return const SizedBox.shrink();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('IP/系列',
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('IP/系列',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Wrap(
@@ -482,7 +483,6 @@ class _CalendarPageState extends State<CalendarPage> {
               }).toList(),
             ),
           ],
-        ),
       ),
     );
   }
@@ -493,26 +493,24 @@ class _CalendarPageState extends State<CalendarPage> {
     final daysWithOrders = _orderMap.keys.length;
     final currencyFormat = NumberFormat.currency(symbol: '¥', decimalDigits: 0);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${_currentMonth.month}月统计',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildStatItem(Icons.shopping_bag, '$totalOrders笔', '订单'),
-                const SizedBox(width: 24),
-                _buildStatItem(Icons.calendar_today, '$daysWithOrders天', '购买日'),
-                const SizedBox(width: 24),
-                _buildStatItem(Icons.payments, currencyFormat.format(totalAmount), '总额'),
-              ],
-            ),
-          ],
-        ),
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${_currentMonth.month}月统计',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildStatItem(Icons.shopping_bag, '$totalOrders笔', '订单'),
+              const SizedBox(width: 24),
+              _buildStatItem(Icons.calendar_today, '$daysWithOrders天', '购买日'),
+              const SizedBox(width: 24),
+              _buildStatItem(Icons.payments, currencyFormat.format(totalAmount), '总额'),
+            ],
+          ),
+        ],
       ),
     );
   }
